@@ -1,0 +1,108 @@
+<job id="ZTIDownloadInternetFile">
+  <script language="VBScript" src="ZTIUtility.vbs"/>
+  <script language="VBScript">
+
+' //***************************************************************************
+' // ***** Script Header *****
+' //
+' // File:      ZTI_DownloadInternetFile.wsf
+' //
+' // Purpose:   Wrapper for the IntenetDownloadFile function from ZTIUtility.vbs
+' //            Downloads a file from the internet and stores it locally
+' //
+' // Usage:     cscript.exe ZTI_DownloadInternetFile.wsf URL Destination [debug:True]
+' //
+' //
+' // Customer History:
+' // 
+' //    1    MK    Initial script
+' //
+' // ***** End Header *****
+' //***************************************************************************
+
+Option Explicit
+RunNewInstance
+
+'//----------------------------------------------------------------------------
+'//
+'// Global constants
+'//
+'//---------------------------------------------------------------------------- 
+
+
+
+'//----------------------------------------------------------------------------
+'// End declarations
+'//---------------------------------------------------------------------------- 
+
+
+'//----------------------------------------------------------------------------
+'//  Main Class
+'//----------------------------------------------------------------------------
+
+Class ZTIDownloadInternetFileori
+
+    '//----------------------------------------------------------------------------
+    '//  Class instance variable declarations
+    '//----------------------------------------------------------------------------
+
+    Dim iRetVal
+    
+
+    '//----------------------------------------------------------------------------
+    '//  Constructor to initialize needed global objects
+    '//----------------------------------------------------------------------------
+
+    Private Sub Class_Initialize
+
+        ' No initialization necessary
+
+    End Sub
+    
+    
+    '//----------------------------------------------------------------------------
+    '//  Main routine
+    '//----------------------------------------------------------------------------
+
+    Function Main
+       
+       ' Define local variables
+       Dim sURL, sDest
+       Dim oArgs
+       Dim bResult
+
+       
+        ' Get command line arguments
+       Set oArgs = WScript.Arguments
+
+       If oArgs.Count >= 2 Then
+           ' Substitute command line arguments if necessary
+           sURL = oEnvironment.Substitute(oArgs(0))
+           sDest = oEnvironment.Substitute(oArgs(1))
+
+           oLogging.CreateEntry "Downloading file from " & sURL & " to " & sDest, LogTypeInfo
+
+           ' Download file
+           bResult = oUtility.InternetFileDownload (sURL, sDest)
+
+           If bResult Then
+               oLogging.CreateEntry "Download was successfull.", LogTypeVerbose
+               iRetVal = Success
+           Else
+               oLogging.CreateEntry "Download failed.", LogTypeError
+               iRetVal = Failure
+           End If
+       Else
+           ' Must supply two arguments
+           oLogging.CreateEntry "URL and/or Destination path not supplied. Can't download file", LogTypeError
+       End If
+
+
+       Main = iRetVal
+    End Function
+
+End Class
+
+  </script>
+</job>
+

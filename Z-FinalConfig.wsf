@@ -1,0 +1,150 @@
+<job id="ZeroTouchInstallation">
+   <script language="VBScript" src="ZTIUtility.vbs"/>
+   <script language="VBScript">
+ 
+'//////////////////////////////////////////////////
+'//
+'// Script File:
+'//
+'//   Z-FinalConfig.wsf
+'//
+'//   This script cleans out any existing minint or sysprep folders as well  
+'//   as configuring the domain name and enable windowsupdate. 
+'//   After completion the script reboots the machine.
+'//
+'//   Author: Johan Arwidmark	
+'//   URL: http://www.deployvista.com
+'//
+'//   Credits goes to Richard Trusson 
+'//   URL:http://blogs.technet.com/deploymentguys
+'//   
+'//   Disclaimer
+'//   This script is provided "AS IS" without express 
+'//   or implied warranty of any kind
+'//	  Modified by ACS to run confnet at the end and to update web service information
+'//////////////////////////////////////////////////
+
+'//
+'// Global constant and variable declarations
+'//
+'//---------------------------------------------------------------------------- 
+Option Explicit 
+Dim iRetVal 
+'//----------------------------------------------------------------------------
+'// End declarations
+'//---------------------------------------------------------------------------- 
+'//----------------------------------------------------------------------------
+'// Main routine
+'//---------------------------------------------------------------------------- 
+On Error Resume Next
+iRetVal = ZTIProcess
+ProcessResults iRetVal
+On Error Goto 0 
+'//---------------------------------------------------------------------------
+'//
+'// Function: ZTIProcess()
+'//
+'// Input: None
+'// 
+'// Return: Success - 0
+'// Failure - non-zero
+'//
+'// Purpose: Perform main ZTI processing
+'// 
+'//---------------------------------------------------------------------------
+Function ZTIProcess() 
+     iRetVal = Success 
+     ZTIProcess = iRetval 
+
+'//----------------------------------------------------------------------------
+'// custom code
+'//
+
+'DIM the variable names we are going to use so we comply with Option Explicit
+DIM sSName,sCMD,sReturn,iZTIRetValue,sDomain,sFile,sTemporaryFolder,f
+
+
+
+sSName=oUtility.ScriptName
+'set the return value to assume a failure
+iZTIRetValue="1"
+
+'Start logging for this script
+oLogging.CreateEntry sSName & ": Starting  actions*********************************************************",LogTypeInfo
+
+' Check for SkipFinalSummary value being set to YES
+If UCASE(oEnvironment.Item("SkipFinalSummary")) = "YES" Then
+   oLogging.CreateEntry sSName & "SkipFinalSummary set to YES, continuing",LogTypeInfo
+Else
+   oLogging.CreateEntry sSName & "SkipFinalSummary not set to YES, aborting",LogTypeError
+   ZTIProcess = Failure
+   Exit Function
+End if
+
+
+'Copying script to local machine, temp folder
+Const TemporaryFolder = 2
+Set sTemporaryFolder = oFSO.GetSpecialFolder(TemporaryFolder)
+sFile = oUtility.ScriptDir & "\Z-FinalConfig.hta"
+oFSO.GetFile(sFile).Copy sTemporaryFolder & "\" & oFSO.GetFileName(sFile),True
+sFile = oUtility.ScriptDir & "\Wizard.ico"
+oFSO.GetFile(sFile).Copy sTemporaryFolder & "\" & oFSO.GetFileName(sFile),True
+sFile = oUtility.ScriptDir & "\Wizard.css"
+oFSO.GetFile(sFile).Copy sTemporaryFolder & "\" & oFSO.GetFileName(sFile),True
+
+'Create the cmd to start the HTA
+sDomain = oEnvironment.Item("JOINDOMAIN")
+sCmd="mshta.exe """ & sTemporaryFolder & "\Z-FinalConfig.hta"" " & Chr(34) & sDomain & Chr(34) 
+
+'Log the cmd we are going to run
+oLogging.CreateEntry "About to run " & sCmd,LogTypeInfo
+
+'start the HTA, but don't wait for it to complete - otherwise well never end the TS.
+oShell.CurrentDirectory = sTemporaryFolder
+sReturn=oShell.run (sCmd,1,False)
+
+'Log the return code from starting the HTA
+oLogging.CreateEntry "Return code from " & sCMD & " was : " & sReturn,LogTypeInfo
+
+
+'End Logging for this script
+oLogging.CreateEntry sSName & ": Completed actions *********************************************************",LogTypeInfo
+
+
+			'Dim for web service
+				Dim vData
+				Dim objXmlHttpMain , URL
+				Dim Pk
+				Pk = "[" & oEnvironment.Item("So") & "][" & oEnvironment.Item("Rack") & "_" & oEnvironment.Item("Shelf") & "]"
+vData = "{"
+vData = vData & """notifid"":""" & Pk & ""","
+vData = vData & """status"":""<b>Final config and customisation run fine.<br />Machine ready</b>"","
+vData = vData & """progress"":""100"""
+vData = vData & "}"
+URL = oEnvironment.Item("WebSysprod") & "/api/provisioningnotifications/" & Pk
+Set objXmlHttpMain = CreateObject("Msxml2.ServerXMLHTTP") 
+objXmlHttpMain.open "PUT",URL, True 
+objXmlHttpMain.setRequestHeader "Content-Type", "application/json"
+objXmlHttpMain.send vData
+
+
+If sReturn="0" Then
+	iZTIRetValue="0"
+	oLogging.CreateEntry "HTA was started succesfully",LogTypeInfo
+Else
+	oLogging.CreateEntry "HTA failed to start",LogTypeError
+End If
+
+ZTIProcess=CInt(iZTIRetValue)
+
+
+'//
+'// End Custom Code
+'//-----------------------------------------------------------------------------
+
+
+End Function 
+
+
+	</script>
+</job>

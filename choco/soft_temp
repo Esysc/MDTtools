@@ -1,0 +1,17 @@
+#Software list for chocolatey
+# This file can contain hash lines like this one and is interpreted as a comment
+# IMPORTANT: NO EMPTY LINES ARE ALLOWED!
+#
+hobocopy
+cygwin
+javaruntime
+mobaxterm
+firefox
+winscp
+procexp
+filezilla
+notepadplusplus
+visioviewer
+excel.viewer
+wordviewer
+powerpoint.viewer

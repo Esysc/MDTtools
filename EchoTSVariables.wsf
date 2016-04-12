@@ -1,0 +1,173 @@
+<job id="EchoTSVariables">
+    <script language="VBScript" src="ZTIUtility.vbs"/>
+    <script language="VBScript">
+    
+'#########################################################################################
+'#   MICROSOFT LEGAL STATEMENT FOR SAMPLE SCRIPTS/CODE
+'#########################################################################################
+'#   This Sample Code is provided for the purpose of illustration only and is not 
+'#   intended to be used in a production environment.
+'#
+'#   THIS SAMPLE CODE AND ANY RELATED INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY 
+'#   OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED 
+'#   WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
+'#
+'#   We grant You a nonexclusive, royalty-free right to use and modify the Sample Code 
+'#   and to reproduce and distribute the object code form of the Sample Code, provided 
+'#   that You agree: 
+'#   (i)      to not use Our name, logo, or trademarks to market Your software product 
+'#            in which the Sample Code is embedded; 
+'#   (ii)     to include a valid copyright notice on Your software product in which 
+'#            the Sample Code is embedded; and 
+'#   (iii)    to indemnify, hold harmless, and defend Us and Our suppliers from and 
+'#            against any claims or lawsuits, including attorneys’ fees, that arise 
+'#            or result from the use or distribution of the Sample Code.
+'#########################################################################################
+
+' //***************************************************************************
+' // ***** Script Header *****
+' //
+' // Solution:  Solution Accelerator - Microsoft Deployment Toolkit
+' // File:      EchoTSVariables.wsf
+' //
+' // Purpose:   Echo variables from the SMS 2003 or SCCM 2007 Task Sequencer,
+' //            MDT VARIABLES.DAT, and from the Windows Script Host Process
+' //            environment.  Will also echo current MDT log path.
+' //
+' // Usage:     To be used in a CMD shell script FOR statement - 
+' //
+' //            for /F "tokens=1,2* delims==" %%i in ('cscript //nologo "%SCRIPTDIR%\EchoTSVariables.wsf"') do set %%i=%%j>nul
+' //
+' // Version:   1.0.0
+' //
+' // History:
+' // 1.0.0  07/06/2010  Created initial script.
+' //
+' // Customer History:
+' //
+' // ***** End Header *****
+' //***************************************************************************
+
+
+'//----------------------------------------------------------------------------
+'//
+'//  Global constant and variable declarations
+'//
+'//----------------------------------------------------------------------------
+
+'Option Explicit
+
+Dim iRetVal
+
+
+'//----------------------------------------------------------------------------
+'//  End declarations
+'//----------------------------------------------------------------------------
+
+
+'//----------------------------------------------------------------------------
+'//  Main routine
+'//----------------------------------------------------------------------------
+
+On Error Resume Next
+iRetVal = ZTIProcess
+ProcessResults iRetVal
+On Error Goto 0
+
+
+'//---------------------------------------------------------------------------
+'//
+'//  Function:    ZTIProcess()
+'//
+'//  Input:    None
+'// 
+'//  Return:    Success - 0
+'//        Failure - non-zero
+'//
+'//  Purpose:    Perform main ZTI processing
+'//        
+'//---------------------------------------------------------------------------
+Function ZTIProcess()
+
+
+    On Error Resume Next
+
+    ZTIProcess = Success
+    bTSEnvironment = False
+
+
+    ' Create SMS 2003 OSD environment instance
+
+    Err.Clear
+    Set oTSEnvV3 = CreateObject("OSD.Environment")
+    If Err then
+        'oLogging.CreateEntry "Cannot create SMS 2003 Task Sequencer environment", LogTypeInfo
+        Set oTSEnvV3 = Nothing
+        Err.Clear
+    Else
+        'oLogging.CreateEntry "Echoing SMS 2003 Task Sequencer Variables", LogTypeInfo
+        bTSEnvironment = True
+        For Each oVar In oTSEnvV3.GetVariables
+            WScript.Echo oVar & "=" & oTSEnvV3(oVar)
+        Next
+    End if
+
+
+    ' Create SMSv4 Task Sequence environment
+
+    Err.Clear
+    Set oTSEnvV4 = CreateObject("Microsoft.SMS.TSEnvironment")
+    If Err then
+        'oLogging.CreateEntry "Cannot create SCCM 2007 Task Sequencer environment", LogTypeInfo
+        Set oTSEnvV4 = Nothing
+        Err.Clear
+    Else
+        'oLogging.CreateEntry "Echoing SCCM 2007 Task Sequencer Variables", LogTypeInfo
+        bTSEnvironment = True
+        For Each oVar In oTSEnvV4.GetVariables
+            WScript.Echo oVar & "=" & oTSEnvV4(oVar)
+        Next 
+    End if
+
+
+    ' Get contents of VARIABLES.DAT if it exists
+
+    sPersistPath = oEnvironment.PersistPath
+    sPersistFile = oEnvironment.PersistFile
+
+    If oFSO.FileExists(sPersistPath & "\" & sPersistFile) then
+
+        Err.Clear
+        Set oVariablesDat = oUtility.CreateXMLDOMObject
+        If Err then
+            ' Unable to create XML object
+            'oLogging.CreateEntry "Unable to create XML object for VARIABLES.DAT", LogTypeInfo
+            Err.Clear
+        Else
+            oVariablesDat.Load sPersistPath & "\" & sPersistFile
+            set oNodes = nothing
+            Set oNodes = oVariablesDat.DocumentElement.SelectNodes("//var")
+            If not (oNodes is Nothing) then
+
+                'oLogging.CreateEntry "Echoing VARIABLES.DAT Variables", LogTypeInfo
+
+                For Each node In oNodes
+                    WScript.Echo node.getAttribute("name") & "=" & node.Text
+                Next
+
+            End if
+        End if
+    End if
+
+
+    ' Get MDT log path
+
+    WScript.Echo "LogPath=" & oUtility.LogPath
+
+
+End Function
+
+
+    </script>
+</job>
+

@@ -1,0 +1,88 @@
+<job id="ZTICopyFolder">
+<script language="VBScript" src="ZTIUtility.vbs"/>
+<script language="VBScript">
+
+Option Explicit 
+Dim iRetVal
+Dim objShell
+Dim currentPath
+Set  objShell = WScript.CreateObject("WScript.Shell")
+currentPath = objShell.CurrentDirectory
+On Error Resume Next
+iRetVal = ZTIProcess
+ProcessResults iRetVal
+Dim GetAnExtension
+On Error Goto 0
+
+Const OverWriteFiles = True
+Set oFSO = CreateObject("Scripting.FileSystemObject")
+
+	Function GetTheBase(filespec)
+GetAnExtension = oFSO.GetExtensionName(filespec)
+	GetTheBase = oFSO.GetBaseName(filespec) & "." & GetAnExtension
+	End Function
+
+Function ZTIProcess()
+
+	' Declare the variables
+	Dim sSourceFolder, ReleaseArr, Current
+	Dim sTargetFolder
+	Dim objNetwork
+	Set objNetwork = Wscript.CreateObject("WScript.Network")
+	Dim serverShare
+	Dim objStdOut
+	Dim objWshScriptExec
+	Dim strLine
+	serverShare =  oEnvironment.Item("OSDPackagerRoot")
+	' Find all releases associated separated by a ','
+	ReleaseArr = split(oEnvironment.Item("OSDCustomerRelease"),",")
+	' Debug for monitoring
+	strLine = " *** Downloading Release(s) *** Be patience..... "
+	objShell.Run   "cmd /c " & currentPath & "\sendNotif.cmd  """ & strLine & """"
+	objNetwork.MapNetworkDrive "T:", serverShare, false, oEnvironment.Item("OSDUserPackager"), oEnvironment.Item("OSDPasswordPackager")
+	
+	'If already mounted I dont care
+	On Error Resume Next
+
+	For Each Current In ReleaseArr
+	
+	'objNetwork.MapNetworkDrive "T:", oEnvironment.Item("OSDPackagerRoot"), false, oEnvironment.Item("OSDUserPackager"), oEnvironment.Item("OSDPasswordPackager")
+	' sSourceFolder = "T:" & oEnvironment.Item("OSDCustomerRelease")
+	' sTargetFolder = "C:\Mycompany\delivery\" & GetTheBase(oEnvironment.Item("OSDCustomerRelease"))
+
+	sSourceFolder = "T:\" & Current & "\*.*"
+	sTargetFolder =  "C:\Mycompany\delivery\" & GetTheBase(Current)
+
+	If Not oFSO.FolderExists(sTargetFolder) Then
+	oFSO.CreateFolder sTargetFolder
+	End If
+	If (Current) <> "" then
+	oLogging.CreateEntry "Copying " &  sSourceFolder & " folder to " & sTargetFolder, LogTypeInfo
+	On Error Resume Next
+
+	' Optional progess logging to the task sequence progress bar
+	oLogging.ReportProgress "Copying " & Current & " to " & sTargetFolder, 30
+	On Error Resume Next
+	' Do the actual copying
+	' Send messages to REST API using sendNotif batch
+	strLine = "Copying " &  sSourceFolder  & " folder to " & sTargetFolder
+	objShell.Run   "cmd /c " & currentPath & "\sendNotif.cmd  """ & strLine & """"
+	On Error Resume Next
+	Set objWshScriptExec = objShell.Exec( "xcopy " & sSourceFolder &  " " & sTargetFolder  & " /s /y /i /e /f /z /c")
+	Set objStdOut = objWshScriptExec.StdOut
+	While Not objStdOut.AtEndOfStream
+		strLine = objStdOut.ReadLine 
+		 objShell.Run   "cmd /c " & currentPath & "\sendNotif.cmd  """ & strLine & """"
+	Wend	
+	'objShell.Run "xcopy " & sSourceFolder &  " " & sTargetFolder  & " /s /y /i /e"
+	'oFSO.CopyFolder sSourceFolder, sTargetFolder, True
+	On Error Resume Next
+	'objNetwork.RemoveNetworkDrive "T:"
+	End If
+	Next
+	Set objShell = Nothing
+	objNetwork.RemoveNetworkDrive "T:"
+	End Function
+
+	</script>
+	</job>

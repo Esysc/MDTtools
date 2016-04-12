@@ -1,0 +1,247 @@
+<job id="ZTIXPWIMInjection">
+   <script language="VBScript" src="ZTIUtility.vbs"/>
+   <script language="VBScript">
+
+' //***************************************************************************
+' // ***** Script Header *****
+' //
+' // Solution:  Solution Accelerator for Business Desktop Deployment
+' // File:      ZTIXPWIMInjection.wsf
+' //
+' // Purpose:   Inject storage drivers into XP/2003 captured WIMs
+' //
+' // Author: ruhle@hotmail.com
+' //
+' // Usage:     cscript ZTIXPWIMInjection.wsf [/debug:true]
+' //
+' // Customer Build Version:      1.0.0
+' // Customer Script Version:     1.0.0
+' //
+' //
+' // Customer History:
+' // 
+' // 05-20-09	Initial coding of this solution
+' //
+' // ***** End Header *****
+' //***************************************************************************
+
+
+'//----------------------------------------------------------------------------
+'//
+'//  Global constant and variable declarations
+'//
+'//----------------------------------------------------------------------------
+
+Option Explicit
+
+Dim iRetVal
+Dim oDriversXML
+
+'//----------------------------------------------------------------------------
+'//  End declarations
+'//----------------------------------------------------------------------------
+
+'//----------------------------------------------------------------------------
+'//  Main routine
+'//----------------------------------------------------------------------------
+
+'On Error Resume Next
+iRetVal = ZTIProcess
+ProcessResults iRetVal
+On Error Goto 0
+
+
+'//---------------------------------------------------------------------------
+'//
+'//  Function:    ZTIProcess()
+'//
+'//  Input:    None
+'// 
+'//  Return:    Success - 0
+'//        Failure - non-zero
+'//
+'//  Purpose:    Perform main ZTI processing
+'//        
+'//---------------------------------------------------------------------------
+Function ZTIProcess()
+
+    Dim iRetVal
+    Dim sDriversDir
+    Dim sArchitecture
+    Dim oDevices
+    Dim oDrivers
+    Dim oDevice
+    Dim oPnPID    
+    Dim fApprovedDevice
+    Dim oApprovedDrivers
+    Dim sGuid
+    Dim sDriver
+    Dim sPlatformDir    
+    Dim sWinDir
+    
+    iRetVal = Success
+
+    oLogging.CreateEntry "Checking environment.", LogTypeInfo
+
+    ' ---------------------------------------------------------------------------
+    ' Check for the correct environment
+    ' ---------------------------------------------------------------------------
+    
+     If UCase(oEnvironment.Item("OSDPLATFORMARCH")) = "AMD64" then
+     
+     	oLogging.CreateEntry "WIM storage injection is not supported on a 64-bit OS at this time.", LogTypeInfo
+     	ZTIProcess = Success
+     	Exit Function
+     
+     End If
+    
+    If Left(oEnvironment.Item("ImageBuild"), 3) <> "5.1" and Left(oEnvironment.Item("ImageBuild"),3) <> "5.2" then
+    
+        oLogging.CreateEntry "3rd party storage drivers only need to be injected for Windows XP and Windows 2003. Build = " & oEnvironment.Item("ImageBuild"), LogTypeInfo
+        ZTIProcess = Success
+        Exit Function
+
+    End if
+    
+   If oEnvironment.Item("DeploymentMethod") = "OSD" then
+
+      oLogging.CreateEntry "No driver actions need to be taken during the OSD preinstall phase.", LogTypeInfo
+      ZTIProcess = Success
+      Exit Function
+
+   End if    
+   
+   ' Only run this task if the OS is NOT installed from an Image File
+   If Not(ucase(right(oEnvironment.Item("InstallFromPath"),4)) = ".WIM") then
+   
+      oLogging.CreateEntry "No actions can be taken for OS Images not installed from *.wim files.", LogTypeInfo
+      ZTIProcess = Success
+      Exit Function
+       
+   End if
+
+
+Dim WshShell : Set WshShell = CreateObject("WScript.Shell")
+Dim fso : Set fso = CreateObject("Scripting.FileSystemObject")
+
+   
+oLogging.CreateEntry "Validating Drivers folder exists.", LogTypeInfo
+
+If fso.FolderExists(ScriptDir & "\Drivers") Then
+	oLogging.CreateEntry "Drivers folder exists.", LogTypeInfo
+Else
+	oLogging.CreateEntry "***** Drivers folder does not exist.", LogTypeInfo
+End If
+
+oLogging.CreateEntry "Validating windows\source folder exists.", LogTypeInfo
+If fso.FolderExists("c:\windows\source") Then
+	oLogging.CreateEntry "windows\source folder exists.", LogTypeInfo
+Else
+	oLogging.CreateEntry "***** windows\source folder does not exist.", LogTypeInfo
+End If
+
+oLogging.CreateEntry "Validating windows\system32\drivers folder exists.", LogTypeInfo
+If fso.FolderExists("c:\windows\system32\drivers") Then
+	oLogging.CreateEntry "windows\system32\drivers folder exists.", LogTypeInfo
+Else
+	oLogging.CreateEntry "***** windows\system32\drivers folder does not exist.", LogTypeInfo
+End If
+
+oLogging.CreateEntry "Validating windows\inf folder exists.", LogTypeInfo
+If fso.FolderExists("c:\windows\inf") Then
+	oLogging.CreateEntry "windows\inf folder exists.", LogTypeInfo
+Else
+	oLogging.CreateEntry "***** windows\inf folder does not exist.", LogTypeInfo
+End If
+
+
+oLogging.CreateEntry "Attempting to inject storage drivers." , LogTypeInfo
+
+
+' copy here to prevent prompt for iastor.sys location on 1st boot
+fso.CopyFile ScriptDir & "\Drivers\*.sys", "c:\windows\source\", True
+fso.CopyFile ScriptDir & "\Drivers\*.sys", "c:\windows\system32\drivers\", True
+fso.CopyFile ScriptDir & "\Drivers\*.inf", "c:\windows\inf\", True
+
+oLogging.CreateEntry  "Loading SYSTEM hive into memory", LogTypeInfo
+WshShell.Run "reg LOAD HKLM\Mount2 c:\windows\system32\config\system", 1, True
+
+ProcessOEMFile ScriptDir & "\Drivers\txtsetup.oem"
+
+oLogging.CreateEntry  "Unloading SYSTEM hive from memory", LogTypeInfo
+
+WshShell.Run "reg UNLOAD HKLM\Mount2", 1, True
+
+oLogging.CreateEntry  "Storage driver integration completed.", LogTypeInfo
+
+oLogging.CreateEntry  "Finished!", LogTypeInfo
+    
+ZTIProcess = Success
+    
+End Function
+
+
+' --------------
+' ProcessOEMFile
+' --------------
+Sub ProcessOEMFile(strOEMFile)
+Dim WshShell : Set WshShell = CreateObject("WScript.Shell")
+Dim dic : Set dic = CreateObject("Scripting.Dictionary")
+Dim fso : Set fso = CreateObject("Scripting.FileSystemObject")
+Dim fsoIn : Set fsoIn = fso.OpenTextFile(strOEMFile, 1) ' open OEM file for read operation
+Dim strLine, arrLine
+oLogging.CreateEntry "Parsing " & strOEMFile, LogTypeInfo
+Do Until fsoIn.AtEndOfStream
+	strLine = fsoIn.ReadLine
+	If Instr(strLine, "id = ") = 1 Then ' this is a device ID...squirrel it away for later
+		oLogging.CreateEntry "Found valid ID in line: " & strLine, LogTypeInfo
+		oLogging.CreateEntry "Splitting line", LogTypeInfo
+		arrLine = Split(strLine, chr(34))
+		If dic.Exists(arrLine(1)) Then
+			oLogging.CreateEntry "Skipping...PNP ID is already in the dictionary object", LogTypeInfo
+		Else
+			oLogging.CreateEntry "Adding to dictionary object", LogTypeInfo
+			dic.Add arrLine(1), arrLine(3)
+		End If
+	End If
+	If Instr(strLine, "value") = 1 Then ' this is a service config item
+		oLogging.CreateEntry "Found valid service reg key in line: " & strLine, LogTypeInfo
+		oLogging.CreateEntry "Splitting line", LogTypeInfo
+		arrLine = Split(strLine, ",")
+		Select Case Trim(arrLine(2))
+			Case "REG_DWORD":
+				arrLine(3) = Hex2Dec(Trim(arrLine(3))) 
+			CASE "REG_SZ":
+				arrLine(3) = Trim(Replace(arrLine(3), chr(34), ""))
+		End Select
+		oLogging.CreateEntry "Writing HKLM\Mount2\ControlSet001\Services\iaStor\" & Trim(arrLine(1)) & " value=" & arrLine(3) & " type=" & Trim(arrLine(2)), LogTypeInfo
+		WshShell.RegWrite "HKLM\Mount2\ControlSet001\Services\iaStor\" & Trim(arrLine(1)), arrLine(3), Trim(arrLine(2))
+	End If
+Loop
+fsoIn.Close ' close OEM file
+oLogging.CreateEntry "Done parsing" & strOEMFile, LogTypeInfo
+oLogging.CreateEntry "Writing devices to critical device database", LogTypeInfo
+Dim device
+For each device In dic
+	' Update CriticalDeviceDatabase in SYSTEM hive and sysprep.inf file by adding each device
+	oLogging.CreateEntry "Writing HKLM\Mount2\ControlSet001\Control\CriticalDeviceDatabase\" & LCase(Replace(device, "\", "#")), LogTypeInfo
+	WshShell.RegWrite "HKLM\Mount2\ControlSet001\Control\CriticalDeviceDatabase\" & LCase(Replace(device, "\", "#")) & "\ClassGUID", "{4D36E96A-E325-11CE-BFC1-08002BE10318}", "REG_SZ"
+	WshShell.RegWrite "HKLM\Mount2\ControlSet001\Control\CriticalDeviceDatabase\" & LCase(Replace(device, "\", "#")) & "\Service", dic.Item(device), "REG_SZ"
+Next
+End Sub
+
+
+
+Function Hex2Dec(intIn)
+Hex2Dec = Clng("&h" & intIn)
+End Function
+
+
+
+Function ScriptDir
+ScriptDir = Left(WScript.ScriptFullName, instrrev(WScript.ScriptFullName, "\") - 1 )
+End Function
+
+</script>
+</job>
+

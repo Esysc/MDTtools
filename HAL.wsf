@@ -1,0 +1,251 @@
+<job id="HAL">
+
+<script language="VBScript" src="ZTIUtility.vbs"/>
+
+<script language="VBScript"> 
+
+' //***************************************************************************
+
+' // ***** Script Header *****
+
+' //
+
+' // Purpose: Change HAL
+
+' //
+
+' // Prerequsits: The refrence image must be SP2 or SP3
+
+' //
+
+' // Coretech History:
+
+' // 1.0.0     Michael Petersen 19/09/2008  Created initial version.
+
+' // 2.0.0     Michael Petersen 25/10/2010  Updated to support both MDT 2008 and 2010
+
+' //
+
+' // ***** End Header *****
+
+' //*************************************************************************** 
+
+'//----------------------------------------------------------------------------
+
+'// Global constant and variable declarations
+
+'//---------------------------------------------------------------------------- 
+
+Option Explicit 
+
+Dim iRetVal, sHalType, sLocalDrive, sHalSource, sSysprep, sfile, sSystem32, sHal, sNtoskrnl, sNkrnlpa, env 
+
+Set env = CreateObject("Microsoft.SMS.TSEnvironment")
+
+'//----------------------------------------------------------------------------
+
+'// End declarations
+
+'//---------------------------------------------------------------------------- 
+
+'//----------------------------------------------------------------------------
+
+'// Main routine
+
+'//---------------------------------------------------------------------------- 
+
+On Error Resume Next
+
+iRetVal = ZTIProcess
+
+ProcessResults iRetVal
+
+On Error Goto 0 
+
+'//---------------------------------------------------------------------------
+
+'//
+
+'// Function: ZTIProcess()
+
+'//
+
+'// Input: None
+
+'// 
+
+'// Return: Success - 0
+
+'// Failure - non-zero
+
+'//
+
+'// Purpose: Perform main ZTI processing
+
+'// 
+
+'//---------------------------------------------------------------------------
+
+Function ZTIProcess() 
+
+iRetVal = Success 
+
+ZTIProcess = iRetval 
+
+
+
+' Check for Sysprep.inf and set Path
+
+sSysprep = env("OSDAnswerFilePath")
+
+sLocalDrive = env("OSDisk")
+
+'Check for presence of sysprep.inf
+
+If oFSO.fileExists(sSysprep) then
+
+        oLogging.CreateEntry "Found sysprep in " & sSysprep, LogTypeInfo
+
+Else
+
+        oLogging.CreateEntry "Could not locate Sysprep", LogTypeWarning
+
+End if
+
+'Set HAL source path from sp2 or sp3
+
+If oFSO.fileExists(sLocalDrive & "\WINDOWS\Driver Cache\i386\sp3.cab") then
+
+        sHALsource = sLocalDrive & "\WINDOWS\Driver Cache\i386\sp3.cab"
+
+        oLogging.CreateEntry "HAL replasment files will come from: " & sHALsource, LogTypeInfo
+
+elseIf oFSO.fileExists(sLocalDrive & "\WINDOWS\Driver Cache\i386\sp2.cab") then
+
+        sHALsource = sLocalDrive & "\WINDOWS\Driver Cache\i386\sp2.cab"
+
+        oLogging.CreateEntry "HAL replasment files will come from: " & sHALsource, LogTypeInfo
+
+else
+
+        oLogging.CreateEntry "no HAL replasment fileses present", LogTypeInfo
+
+end if
+
+'Get the HAL type from the registry (from Windows PE).  This will tell us if we are running on a PIC or an APIC chipset.
+
+        oLogging.CreateEntry "Configuring HAL replacement", LogTypeInfo
+
+        sHalType = oShell.RegRead("HKLM\SYSTEM\CurrentControlSet\Enum\Root\ACPI_HAL\0000\HardwareID")
+
+        oLogging.CreateEntry "Windows PE is using HAL " & sHalType(0), LogTypeInfo                              
+
+Select Case lCase(sHalType(0))
+
+Case "acpipic", "acpipic_up"
+
+        'Add the UpdateUPHAL command to the Sysprep.inf file.
+
+        oUtility.WriteINI "C:\Sysprep\Sysprep.inf", "Unattended", "UpdateUPHAL", "ACPIPIC_UP,C:\windows\Inf\Hal.inf"
+
+        oLogging.CreateEntry "Updated SYSPREP.INF to replace HAL with uniprocessor PIC HAL", LogTypeInfo
+
+        'Configure HAL and Krnl
+
+        sHal = "HALACPI.DLL"
+
+        sNtoskrnl = "NTOSKRNL.EXE" 
+
+        sNkrnlpa = "NTKRNLPA.EXE"
+
+Case "acpiapic", "acpiapic_up"
+
+        if oShell.Environment.item("NUMBER_OF_PROCESSORS") > 1 then
+
+        'If Processors.Count > 1 Then'Add the UpdateHAL command to the Sysprep.inf file.
+
+                oUtility.WriteINI sSysprep, "Unattended", "UpdateHAL", "ACPIAPIC_MP,C:\windows\Inf\Hal.inf"
+
+                oLogging.CreateEntry "Updated SYSPREP.INF to replace HAL with multiprocessor APIC HAL", LogTypeInfo
+
+                'Configure HAL and Krnl
+
+                sHal = "HALMACPI.DLL"
+
+                sNtoskrnl = "NTKRNLMP.EXE" 
+
+                sNkrnlpa = "NTKRPAMP.EXE"       
+
+        Else
+
+                'Add the UpdateUPHAL command to the Sysprep.inf file.
+
+                oUtility.WriteINI sSysprep, "Unattended", "UpdateUPHAL", "ACPIAPIC_UP,C:\windows\Inf\Hal.inf"
+
+                oLogging.CreateEntry "Updated SYSPREP.INF to replace HAL with uniprocessor APIC HAL", LogTypeInfo
+
+                'Configure HAL and Krnl
+
+                sHal = "HALAACPI.DLL"
+
+                sNtoskrnl = "NTOSKRNL.EXE" 
+
+                sNkrnlpa = "NTKRNLPA.EXE"
+
+        End If
+
+Case "acpiapic_mp"
+
+        'Add the UpdateHAL command to the Sysprep.inf file.
+
+        oUtility.WriteINI sSysprep, "Unattended", "UpdateHAL", "ACPIAPIC_MP,C:\windows\Inf\Hal.inf"
+
+        oLogging.CreateEntry "Updated SYSPREP.INF to replace HAL with multiprocessor APIC HAL", LogTypeInfo     
+
+        'Configure HAL and Krnl
+
+        sHal = "HALMACPI.DLL"
+
+        sNtoskrnl = "NTKRNLMP.EXE" 
+
+        sNkrnlpa = "NTKRPAMP.EXE"
+
+End Select              
+
+'Check if System32 is present and unpack needed files.
+
+sSystem32 = sLocalDrive  & "\Windows\System32\"
+
+oLogging.CreateEntry "Checking for access to " & sSystem32, LogTypeInfo
+
+If oFSO.FolderExists(sSystem32) then 
+
+        oLogging.CreateEntry sSystem32 & " Found", LogTypeInfo
+
+        For Each sFile in Array(sHal,sNtoskrnl,sNkrnlpa)
+
+                oShell.Run "expand " & Chr(34) & sHalSource & Chr(34) & " -f:" &sFile & " " &sSystem32,0,true
+
+                oLogging.CreateEntry "Copying " & sFile & " to " & sSystem32, LogTypeInfo 
+
+        Next
+
+                oFSO.CopyFile sSystem32 &sHal, sSystem32 & "HAL.dll", true
+
+                oFSO.CopyFile sSystem32 &sNtoskrnl, sSystem32 & "NTOSKRNL.EXE", true
+
+                oFSO.CopyFile sSystem32 &sNkrnlpa, sSystem32 & "NTKRNLPA.EXE", true
+
+                oLogging.CreateEntry "rename HAL and Kernal files", LogTypeInfo 
+
+        Else
+
+                oLogging.CreateEntry "Error - Folder " & sSystem32 & " Not Found", LogTypeError
+
+End If
+
+End Function 
+
+</script>
+
+</job>

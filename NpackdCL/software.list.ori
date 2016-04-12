@@ -1,0 +1,32 @@
+#Software list for Npackdcl
+#The web repo software list could be find at the address: http://npackd.appspot.com/p
+#if you wish to add packages, look at the address above and find the package ID, then copy here
+# This file can contain hash lines like this one and is interpreted as a comment
+# IMPORTANT: NO EMPTY LINES ARE ALLOWED!
+# 
+#cygwin64
+net.mobatek.mobaxterm.MobaXterm
+org.mozilla.Firefox
+net.winscp.WinSCP
+com.microsoft.ProcessExplorer
+org.filezilla-project.FileZillaClient
+com.freesshd.FreeFTPD
+net.sourceforge.NotepadPlusPlus
+org.libreoffice.LibreOffice
+com.microsoft.ProcessExplorer
+com.microsoft.VisioViewer
+com.microsoft.WordViewer
+com.microsoft.WordViewer
+com.microsoft.PowerPointViewer
+pspad
+#uk.org.greenend.chiark.sgtatham.Putty
+soapui64
+org.wireshark.Wireshark64
+info.kowalczyk.blog.SumatraPDF
+org.nmap.Zenmap
+org.7-zip.SevenZIP64
+com.microsoft.WMIAdministrativeTools
+org.winpcap.WinPcapInstaller
+org.vim.Vim64
+com.microsoft.PsTools
+net.getpaint.paintdotnet64

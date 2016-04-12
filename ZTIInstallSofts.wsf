@@ -1,0 +1,30 @@
+<job id="ZTIInstallSofts">
+<script language="VBScript" src="ZTIUtility.vbs"/>
+<script language="VBScript">
+
+Option Explicit 
+Dim iRetVal
+
+iRetVal = ZTIProcess
+ProcessResults iRetVal
+On Error Goto 0
+
+Function ZTIProcess()
+
+ ' Declare the variables
+dim WshShell, Results
+Set WshShell = CreateObject("WScript.Shell")
+WshShell.Run chr(34)  & "Z:\MDT\Scripts\NpackdCL\install_soft.bat" & Chr(34), 0
+ oLogging.CreateEntry "Running install_soft.bat script", LogTypeInfo
+
+ ' Optional progess logging to the task sequence progress bar
+ oLogging.ReportProgress , 30
+
+
+
+
+Set WshShell = Nothing
+End Function
+
+</script>
+</job>

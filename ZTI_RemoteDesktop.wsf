@@ -1,0 +1,55 @@
+<job id="ZTI_RemoteDesktop">
+	<script language="VBScript" src="ZTIUtility.vbs"/>
+	<script language="VBScript">
+
+' // ***************************************************************************
+' // 
+' // Copyright Keith Garner (KeithGa.Com).  All rights reserved.
+' // 
+' // Microsoft Deployment Toolkit Solution Accelerator
+' //
+' // File:      ZTI_RemoteDesktop.wsf
+' // 
+' // Purpose:   Enable Remote desktop on the local machine
+' // 
+' // Usage:     cscript.exe [//nologo] ZTI_RemoteDesktop.wsf [/debug:true]
+' // 
+' // ***************************************************************************
+
+Option Explicit
+RunNewInstance
+
+Class ZTI_RemoteDesktop
+
+	Function Main
+	
+		Dim iResult
+	
+		oLogging.CreateEntry "---------------- Initialization ----------------", LogTypeInfo
+		oLogging.CreateEntry "Enable Remote Dekstop...", LogTypeInfo
+		
+		' Enable Remote Desktop ( 0 = Enable, 1 = Disable )
+		oUtility.RegWrite "HKLM\system\currentcontrolset\control\Terminal Server\fDenyTSConnections",0
+		
+		' Disable Strong Security
+		' oUtility.RegWrite "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp\UserAuthentication",0
+		
+		If (UCASE(oEnvironment.Item("IsServerCoreOS")) <> "TRUE") then
+		
+			' Server OS'es already have the firewall servers enabled correctly.
+			' For Workstation OS'es we must enable:
+			oUtility.RunWithHeartbeat "netsh firewall Set service REMOTEDESKTOP ENABLE"
+			oUtility.RunWithHeartbeat "netsh firewall set service REMOTEAdmin ENABLE"
+			
+		End if
+
+		Main = SUCCESS
+
+	End Function
+
+
+End class
+
+	</script>
+</job>
+

@@ -1,0 +1,18 @@
+Windows Registry Editor Version 5.00
+;Show Desktop Background as Start Screen Background
+[HKEY_USERS\CUSTOM\Software\Microsoft\Windows\CurrentVersion\Explorer\Accent]
+"MotionAccentId_v1.00"=dword:000000db
+ 
+;Turn off The Let Me Teach You About Metro Tutorial Tips
+[HKEY_USERS\CUSTOM\Software\Policies\Microsoft\Windows\EdgeUI]
+"DisableHelpSticker"=dword:00000001
+ 
+;disables SPDY/3 in IE11
+[HKEY_USERS\CUSTOM\Software\Microsoft\Windows\CurrentVersion\Internet Settings]
+"EnableSPDY3_0"=dword:00000000
+ 
+;set IE11 not to open in the METRO IE app
+[HKEY_USERS\CUSTOM\Software\Microsoft\Internet Explorer\Main]
+"ApplicationTileImmersiveActivation"=dword:00000000
+"AssociationActivationMode"=dword:00000002
+
