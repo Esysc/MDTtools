@@ -10,7 +10,7 @@
 ' //
 ' // File:      ZTICopyLogs.wsf
 ' // 
-' // Version:   6.3.8298.1000
+' // Version:   6.3.8330.1000
 ' // 
 ' // Purpose:   Copy the smsts.log and bdd.log files to SLshare
 ' // 

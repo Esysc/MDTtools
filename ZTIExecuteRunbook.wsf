@@ -10,7 +10,7 @@
 ' //
 ' // File:      ZTIExecuteRunbook.wsf
 ' // 
-' // Version:   6.3.8298.1000
+' // Version:   6.3.8330.1000
 ' // 
 ' // Purpose:   Execute a System Center Orchestrator 2012 runbook
 ' // 
@@ -148,7 +148,8 @@ Class ZTIExecuteRunbook
 
 		' Get the job ID
 
-		Set oJob = oResult.SelectSingleNode("//entry/id")
+		oLogging.CreateEntry oResult.XML, LogTypeVerbose
+		Set oJob = oResult.SelectSingleNode("//atom:entry/atom:id")
 		If oJob is Nothing then
 			oLogging.ReportFailure "Unable to find job.", 10802
 		End if
@@ -176,7 +177,7 @@ Class ZTIExecuteRunbook
 				oLogging.ReportFailure "Unable to get Orchestrator job status.", 10803
 			End if
 
-			Set oStatus = oJob.SelectSingleNode("//entry/content/m:properties/d:Status")
+			Set oStatus = oJob.SelectSingleNode("//atom:entry/atom:content/m:properties/d:Status")
 			If not (oStatus is Nothing) then
 				If UCase(oStatus.Text) <> "PENDING" and UCase(oStatus.Text) <> "RUNNING" then
 					bFinish = True
@@ -199,7 +200,7 @@ Class ZTIExecuteRunbook
 		' Get the instance ID
 
 		Set oInstances = Invoke(sJob & "/Instances", "GET", "")
-		Set oInstance = oInstances.SelectSingleNode("//entry/id")
+		Set oInstance = oInstances.SelectSingleNode("//atom:entry/atom:id")
 		If oInstance is Nothing then
 			oLogging.ReportFailure "Unable to get Orchestrator job runbook instance.", 10804
 		End if
@@ -212,12 +213,12 @@ Class ZTIExecuteRunbook
 		If oParameters is Nothing then
 			oLogging.ReportFailure "Unable to get Orchestrator job runbook instance parameters.", 10805
 		End if
-		For each oParameter in oParameters.SelectNodes("//entry")
+		For each oParameter in oParameters.SelectNodes("//atom:entry")
 
-			If UCase(oParameter.selectSingleNode("content/m:properties/d:Direction").Text) = "OUT" then
-				oLogging.CreateEntry "Processing output parameter " & oParameter.selectSingleNode("content/m:properties/d:Name").Text, LogTypeInfo
-				sName = Replace(oParameter.selectSingleNode("content/m:properties/d:Name").Text, " ", "")
-				sValue = oParameter.selectSingleNode("content/m:properties/d:Value").Text
+			If UCase(oParameter.selectSingleNode("atom:content/m:properties/d:Direction").Text) = "OUT" then
+				oLogging.CreateEntry "Processing output parameter " & oParameter.selectSingleNode("atom:content/m:properties/d:Name").Text, LogTypeInfo
+				sName = Replace(oParameter.selectSingleNode("atom:content/m:properties/d:Name").Text, " ", "")
+				sValue = oParameter.selectSingleNode("atom:content/m:properties/d:Value").Text
 				oEnvironment.Item(sName) = sValue
 			End if
 
@@ -250,6 +251,7 @@ Class ZTIExecuteRunbook
 
 		Set oHTTP = CreateObject("MSXML2.ServerXMLHTTP")
 		Set oReturn = oUtility.GetMSXMLDOMDocument
+		oReturn.setProperty "SelectionNamespaces", "xmlns:atom='http://www.w3.org/2005/Atom' xmlns:d='http://schemas.microsoft.com/ado/2007/08/dataservices' xmlns:m='http://schemas.microsoft.com/ado/2007/08/dataservices/metadata'"
 		Set Invoke = oReturn
 
 
@@ -306,7 +308,6 @@ Class ZTIExecuteRunbook
 				bNAACred = oUtility.GetNextNAACred(iTryIteration)
 				If bNAACred Then 
 					' We will try another account
-					Continue
 				Else
 					' All accounts have been tried and been denied
 					oLogging.CreateEntry "All network access accounts failed to be authorized.", LogTypeError

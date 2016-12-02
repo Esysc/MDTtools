@@ -6,7 +6,7 @@
 ' //
 ' // File:      ZTIPrereq.vbs
 ' // 
-' // Version:   6.3.8298.1000
+' // Version:   6.3.8330.1000
 ' // 
 ' // Purpose:   Check to see if the machine has the prerequisite software
 ' //            installed, and that it is functional.

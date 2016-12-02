@@ -10,7 +10,7 @@
 ' //
 ' // File:      ZTIApplyGPOPack.wsf
 ' // 
-' // Version:   6.3.8298.1000
+' // Version:   6.3.8330.1000
 ' // 
 ' // Purpose:   Install GPO Pack created using Security Configuration Manager (SCM)
 ' // 
@@ -87,7 +87,10 @@ Class ZTIApplyGPOPack
 			If oEnvironment.Item("OSCurrentVersion") <> "" then
 				oUtility.GetMajorMinorVersion(oEnvironment.Item("OSCurrentVersion"))
 
-				If (oUtility.VersionMajor  = 6 and oUtility.VersionMinor = 3 ) and oEnvironment.Item("IsServerOS") then 
+				If (oUtility.VersionMajor = 10 and oUtility.VersionMinor = 0 ) and Not oEnvironment.Item("IsServerOS") then 
+					sOS = "Win10RTM"
+					oLogging.CreateEntry "Using Default Windows 10 RTM GPO Pack", LogTypeInfo
+				ElseIf (oUtility.VersionMajor  = 6 and oUtility.VersionMinor = 3 ) and oEnvironment.Item("IsServerOS") then 
 					sOS = "WS2012R2"
 					oLogging.CreateEntry "Using Default Windows Server 2012 RTM GPO Pack", LogTypeInfo
 				ElseIf (oUtility.VersionMajor  = 6 and oUtility.VersionMinor = 3) and Not(oEnvironment.Item("IsServerOS")) then 

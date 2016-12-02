@@ -10,7 +10,7 @@
 ' //
 ' // File:      ZTILangPacksOnline.wsf
 ' // 
-' // Version:   6.3.8298.1000
+' // Version:   6.3.8330.1000
 ' // 
 ' // Purpose:   Install Language Packs while in the full OS
 ' // 
@@ -69,7 +69,7 @@ Class ZTILangPacksOnline
 		Dim sFolderName
 		Dim iOSVerMajor, iOSVersionMinor
 		
-		oUtility.GetMajorMinorVersion(oEnvironment.Item("OSVersion"))
+		oUtility.GetMajorMinorVersion(oEnvironment.Item("OSCurrentVersion"))
 		iOSVerMajor = oUtility.VersionMajor
 		iOSVersionMinor = oUtility.VersionMinor
 
@@ -105,7 +105,7 @@ Class ZTILangPacksOnline
 					sFolderName = oFile.ParentFolder
 					oLogging.CreateEntry "Found language Pack to install in folder " & sFolderName,LogTypeInfo
 					oLogging.CreateEntry "Installing Language Pack",LogTypeInfo
-					sCmd = sLpkSetup & " /i * /p " & sFolderName & " /s"
+					sCmd = sLpkSetup & " /i * /p """ & sFolderName & """ /s"
 					iRetVal = oUtility.RunWithHeartbeat(sCmd)
 					TestAndLog iRetVal, "Online language pack installation. Folder Name: " & sFolderName
 						

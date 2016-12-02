@@ -6,7 +6,7 @@
 ' //
 ' // File:      DeployWiz_Roles.vbs
 ' // 
-' // Version:   6.3.8298.1000
+' // Version:   6.3.8330.1000
 ' // 
 ' // Purpose:   Allow the selection of roles and features.
 ' // 

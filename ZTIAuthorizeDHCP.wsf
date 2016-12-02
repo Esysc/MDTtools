@@ -9,7 +9,7 @@
 ' //
 ' // File:      ZTIAuthorizeDHCP.wsf
 ' // 
-' // Version:   6.3.8298.1000
+' // Version:   6.3.8330.1000
 ' // 
 ' // Purpose:   Adds a DHCP server to the list of authorized servers in Active Directory.
 ' // 

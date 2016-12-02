@@ -12,7 +12,7 @@
 ' //
 ' // File:      Litetouch.wsf
 ' // 
-' // Version:   6.3.8298.1000
+' // Version:   6.3.8330.1000
 ' // 
 ' // Purpose:   Drive the lite touch deployment process
 ' // 
@@ -97,6 +97,7 @@ Class Litetouch
 		Dim sWizard
 		Dim sDisableDiskMgr
 		Dim iCurrentOSVerMajor
+		Dim sUpgradeFailureCode
 
 		iRetVal = Success
 
@@ -326,27 +327,24 @@ Class Litetouch
 
 		oLogging.CreateEntry "DeploymentMethod = " & oEnvironment.Item("DeploymentMethod"), LogTypeInfo
 
+		'//----------------------------------------------------------------------------
+		'//  If there were any "saved" network settings, restore them now.
+		'//----------------------------------------------------------------------------
+
+		If isNumeric(oEnvironment.Item("OSDAdapterCount")) then
+			If Cint(oEnvironment.Item("OSDAdapterCount")) > 0 then                                
+				sCmd = "wscript.exe """ & oUtility.ScriptDir & "\ZTINicConfig.wsf"" /RestoreWithinWinPE"
+				iRetVal = RunAndLog(sCmd, true)
+				TestAndLog iRetVal,"Excution: " & sCmd
+			End if
+		End if
+
 
 		'//----------------------------------------------------------------------------
 		'//  Find the "real" DeployRoot
 		'//----------------------------------------------------------------------------
 
 		If oEnvironment.Item("DeploymentMethod") = "UNC" then
-
-			'//
-			'//  If there were any "saved" network settings. Restore them now.
-			'//
-			If isNumeric(oEnvironment.Item("OSDAdapterCount")) then
-			
-				If Cint(oEnvironment.Item("OSDAdapterCount")) > 0 then
-				
-					sCmd = "wscript.exe """ & oUtility.ScriptDir & "\ZTINicConfig.wsf"" /RestoreWithinWinPE"
-					iRetVal = RunAndLog(sCmd, true)
-					TestAndLog iRetVal,"Excution: " & sCmd
-					
-				End if
-				
-			End if
 
 			' Set the DeployRoot based on where we were started from
 
@@ -627,7 +625,10 @@ Class Litetouch
 					SetPropertyDefault "JoinWorkgroup", "WorkGroup", "Join basic workgroup"
 					
 				End if
-
+				
+				If UCase(oEnvironment.Item("DeploymentType")) =  "UPGRADE" and oEnvironment.Item("IsOSUpgrade") = "" then
+					SetPropertyDefault "IsOSUpgrade", "1", "Wizard is skipped and we are performing upgrade, setting IsOSUpgrade = 1"
+				End if
 
 				SetPropertyDefault "ComputerBackupLocation", "NONE", "Do not backup"
 				SetPropertyDefault "UserDataLocation", "NONE", "Empty Strings break automation"
@@ -918,11 +919,18 @@ Class Litetouch
 				
 			End if
 		' Process is complete
-		Elseif oEnvironment.Item("IsOSUpgrade") = "" or oEnvironment.Item("IsOSUpgrade") = "0" then					
+		Else
 		
-				' Send an event				
-
-				If iRetVal = 0 then				
+				' Send an event	
+				On Error Resume Next				
+				sUpgradeFailureCode = oShell.RegRead("HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Windows\Win10UpgradeStatusCode")
+				
+				If sUpgradeFailureCode <> "" and ucase(sUpgradeFailureCode) = "FAILURE" then
+					oLogging.CreateEvent 41014, LogTypeError, "Litetouch deployment failed during Upgrade " , Array()
+					oLogging.CreateEntry "For more information, consult the task sequencer log ...\SMSTS.LOG.", LogTypeInfo
+					iRetVal = oEnvironment.Item("UpgradeErrorReturnCode")
+					
+				ElseIf iRetVal = 0 then				
 					
 					oLogging.CreateEvent 41015, LogTypeInfo, "LTI deployment completed successfully", Array("0")
 					If ucase(oEnvironment.Item("_DoNotCleanLiteTouch")) = "TRUE" then
@@ -932,9 +940,9 @@ Class Litetouch
 					End if
 					
 				Else
-					oLogging.CreateEvent 41014, LogTypeError, "Litetouch deployment failed, Return Code = " & PrnErrValue ( iRetval ), Array(CStr(iRetVal))
-					oLogging.CreateEntry "For more information, consult the task sequencer log ...\SMSTS.LOG.", LogTypeInfo
-					
+						oLogging.CreateEvent 41014, LogTypeError, "Litetouch deployment failed, Return Code = " & PrnErrValue ( iRetval ), Array(CStr(iRetVal))
+						oLogging.CreateEntry "For more information, consult the task sequencer log ...\SMSTS.LOG.", LogTypeInfo					
+
 				End if
 				
 				' Pass the return code to the wizard
@@ -1035,10 +1043,6 @@ Class Litetouch
 				Case "LOGOFF"
 					Logoff
 				End Select
-		Else			
-			oEnvironment.Item("UpgradeResult") = oShell.RegRead("HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Windows\Win10UpgradeStatusCode")
-			oEnvironment.Item("ScriptRoot") = oEnv("ScriptRoot")
-			oEnvironment.Item("RetVal") = ucase(oEnvironment.Item("UpgradeResult"))
 		End if
 
 

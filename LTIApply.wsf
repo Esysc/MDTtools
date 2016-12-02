@@ -13,7 +13,7 @@
 ' //
 ' // File:      LTIApply.wsf
 ' // 
-' // Version:   6.3.8298.1000
+' // Version:   6.3.8330.1000
 ' // 
 ' // Purpose:   Apply image (OS or PE) to the hard drive
 ' // 
@@ -247,11 +247,6 @@ Class LTIApply
 
 
 			' Copy bootmgr
-			  ' Added to avoid sysprep errors
-
-                        If not oFSO.FolderExists(sBootDrive & "\Boot") then
-                                oFSO.CreateFolder(sBootDrive & "\Boot")
-                        End if
 
 			If not oFSO.FileExists(sBootDrive & "\Bootmgr") then
 				oLogging.CreateEntry "Copying " & oEnvironment.Item("DeployRoot") & "\Boot\" & sArchitecture & "\bootmgr to " & sBootDrive & "\bootmgr", LogTypeInfo
@@ -538,14 +533,14 @@ Class LTIApply
 		
 		If iRC = 0 then
 			oLogging.CreateEvent 41021, LogTypeInfo, "Setup completed successfully.", Array()
+			oLogging.CreateEntry "Requesting reboot for setup.exe to complete Upgrade action", LogTypeInfo
+			oLogging.ReportProgress "Requesting Reboot", 80
+			oEnvironment.Item("SMSTSRebootRequested") = "true"	
+			UpgradeOS = iRC
 		Else
 			oLogging.CreateEvent 41022, LogTypeError, "Setup failed to upgrade OS from  " & sSetupPath & ", rc = " & iRC, Array(iRC)
-		End if
-		
-		oLogging.CreateEntry "Requesting reboot for setup.exe to complete Upgrade action", LogTypeInfo
-		oLogging.ReportProgress "Requesting Reboot", 80
-		oEnvironment.Item("SMSTSRebootRequested") = "true"		
-		UpgradeOS = iRC
+			UpgradeOS = Failure			
+		End if		
 
 	End Function
 	
@@ -873,17 +868,17 @@ Class LTIApply
 			Else
 				sRWMPath = ""
 			End if
-        ElseIf ucase(right(sImagePath,4)) = ".SWM" then 
+		ElseIf ucase(right(sImagePath,4)) = ".SWM" then 
 			sSWMPath =""
-            sSWMPath = mid(sImagePath,1,len(sImagePath)-4) & "*.swm"
-            oLogging.CreateEntry "Found SWM file, adding other SWM files for concatenation: " & sSWMPath, LogTypeInfo
-        End if
+			sSWMPath = mid(sImagePath,1,len(sImagePath)-4) & "*.swm"
+			oLogging.CreateEntry "Found SWM file, adding other SWM files for concatenation: " & sSWMPath, LogTypeInfo
+		End if
 
 
 		' Clean off old OS if running in PE
 
 		If oEnvironment.Item("OSVersion") = "WinPE" then
-			oLogging.ReportProgress "Cleaning drive", 20
+			oLogging.ReportProgress "Cleaning drive", 1
 			CleanDrive
 		End if
 
@@ -924,7 +919,7 @@ Class LTIApply
 		End if
 		sCmd = sCmd & " /Index:" & sImageIndex & " /ApplyDir:" & sDestinationDrive
 		
-		oLogging.ReportProgress "Applying image", 50
+		oLogging.ReportProgress "Applying image", 1
 		iRC = oUtility.FindExeAndRunWithLogging( "DISM.exe", sCmd )
 		TestAndFail iRC, 5624, "Run DISM: " & sCmd
 
@@ -1050,7 +1045,7 @@ Class LTIApply
 		' Apply the unattend.xml.  This takes care of driver injection and servicing (patch, LP, etc.)  Do this from the Panther folder
 		' so that the \Drivers relative path in the unattend.xml works properly.
 
-		oLogging.ReportProgress "Applying unattend.xml with DISM.EXE.", 80
+		oLogging.ReportProgress "Applying unattend.xml with DISM.EXE.", 99
 		iRC = oUtility.RunWithConsoleLogging("dism.exe /Image:" & sDestinationDrive & "\ /Apply-Unattend:" & sDestinationDrive & "\Windows\Panther\Unattend.xml /ScratchDir:" & oUtility.LocalRootPath & "\Scratch")
 		TestAndFail iRc, 5627, "Run DISM.exe"
 

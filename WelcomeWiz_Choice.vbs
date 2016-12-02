@@ -6,7 +6,7 @@
 ' //
 ' // File:      WelcomeWiz_Choice.vbs
 ' // 
-' // Version:   6.3.8298.1000
+' // Version:   6.3.8330.1000
 ' // 
 ' // Purpose:   Scripts for welcome wizard choice pane
 ' // 

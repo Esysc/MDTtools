@@ -11,7 +11,7 @@
 ' //
 ' // File:      ZTIDiskpart.wsf
 ' // 
-' // Version:   6.3.8298.1000
+' // Version:   6.3.8330.1000
 ' // 
 ' // Purpose:   Partition and format the hard drive
 ' // 
@@ -366,7 +366,7 @@ Class ZTIDiskpart
 			
 			If isUEFI then
 
-				oLogging.CreateEntry "Create an uEFI/GPT Boot Partition set. "  & sBootDrive, LogTypeInfo
+				oLogging.CreateEntry "Create an UEFI/GPT Boot Partition set. "  & sBootDrive, LogTypeInfo
 
 				oUtility.RunCommandWrite oExec, "CREATE PARTITION PRIMARY Size=" & cstr(WINRE_DRIVE_SIZE)
 				oUtility.RunCommandWrite oExec, "FORMAT QUICK FS=NTFS LABEL=""Windows RE tools"""
@@ -515,6 +515,7 @@ Class ZTIDiskpart
 				If UCase(sPartitionType) = "RECOVERY" then
 					If oEnvironment.Item("OSDPartitionStyle") = "GPT" then
 						oUtility.RunCommandWrite oExec, "SET ID = de94bba4-06d1-4d40-a16a-bfd50179d6ac"
+						oUtility.RunCommandWrite oExec, "GPT ATTRIBUTES = 0x8000000000000000"
 					Else
 						oUtility.RunCommandWrite oExec, "SET ID = 27"
 					End if

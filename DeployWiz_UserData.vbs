@@ -6,7 +6,7 @@
 ' //
 ' // File:      DeployWiz_Initialization.vbs
 ' // 
-' // Version:   6.3.8298.1000
+' // Version:   6.3.8330.1000
 ' // 
 ' // Purpose:   Main Client Deployment Wizard Initialization routines
 ' // 
@@ -32,6 +32,9 @@ Function InitializeUserDataLocation
 		AllowLocal.Checked = FALSE
 		UDRadio2.click
 		UDRadio2.value = "NETWORK"
+		If Property("UDShare") <> ""AND Property("UDDir") <> "" Then
+			DataPath.value = Property("UDShare") & "\" & Property("UDDir")
+		End if
 
 	Else
 		DataPath.Value = property("UserDataLocation")

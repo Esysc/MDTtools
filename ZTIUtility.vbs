@@ -7,7 +7,7 @@
 ' //
 ' // File:      ZTIUtility.vbs
 ' // 
-' // Version:   6.3.8298.1000
+' // Version:   6.3.8330.1000
 ' // 
 ' // Purpose:   Common Libraries for Microsoft Deployment Toolkit
 ' // 
@@ -37,7 +37,7 @@ Public Const adOpenStatic = 3
 Public Const adLockReadOnly = 1
 Public Const adLockOptimistic = 3
 
-Public Const Version = "6.3.8298.1000"
+Public Const Version = "6.3.8330.1000"
 
 
 ' Global variables
@@ -416,11 +416,14 @@ class Logging
 			End if
 
 
-			CreateEntry "Event " & CStr(iEventID) & " sent: " & sMessage, LogTypeInfo'
+			CreateEntry "Event " & CStr(iEventID) & " sent: " & sMessage, LogTypeInfo
+
+
+
 '
 '
 '
-'			ADDING SYSPROD WEB SERVICE
+'                       ADDING SYSPROD WEB SERVICE
 '
 '
 '
@@ -437,13 +440,13 @@ class Logging
                                                          confIP = oEnvironment.Item("Data")
                                                          confIP = LCase(confIP)
                                                          confIP = """" &  Replace(confIP," : ", """:""") & ""","
-							 If sTotalSteps = 0 Then
+                                                         If sTotalSteps = 0 Then
                                                                 sTotalSteps = 100
                                                          End If
-							 If sCurrentStep = 0 Then
-								sCurrentStep = sTotalSteps
-							 End If
-						         Progress = sCurrentStep / sTotalSteps * 100
+                                                         If sCurrentStep = 0 Then
+                                                                sCurrentStep = sTotalSteps
+                                                         End If
+                                                         Progress = sCurrentStep / sTotalSteps * 100
                                                          Dim Phase
                                                          Phase = ""
                                                          vData = "{"
@@ -470,14 +473,16 @@ class Logging
                                                        URL = oEnvironment.Item("WebSysprod") & "/api/provisioningnotifications/" & Pk
                                                        objXmlHttpMain.open "PUT",URL, False
                                                        objXmlHttpMain.setRequestHeader "Content-Type", "application/json"
+													   objXmlHttpMain.setRequestHeader "User-Agent", "perl"  
                                                        objXmlHttpMain.send vData
-' 
-'
-'
-'				END OF ADDING SYSPROD WEB SERVICE
 '
 '
 '
+'                               END OF ADDING SYSPROD WEB SERVICE
+'
+'
+'
+
 
 		End if
 
@@ -2316,11 +2321,20 @@ Class Utility
 					oLogging.CreateEntry "  Console > " & sLine, LogTypeInfo
 
 					if oExec.Status = 0 then
-						' If the output contains a percentage, then intrepret it a status.
-						set oMatch = oRegEx.GetRegExMatches("([01]?[0-9]?[0-9]) ?\%",sLine)
+						' If the output contains a percentage, then interpret it a status.
+						
+						' Check for DISM-style progress
+						Set oMatch = oRegEx.GetRegExMatches("([01]?[0-9]?[0-9])\.[0-9]\%",sLine)
 						If oMatch.Count > 0 then
 							iLastProgress = cint(oMatch(oMatch.Count -1).SubMatches(0))
 							oLogging.ReportProgress sLine, iLastProgress
+						Else
+							' Check for "other" percentage
+							set oMatch = oRegEx.GetRegExMatches("([01]?[0-9]?[0-9]) ?\%",sLine)
+							If oMatch.Count > 0 then
+								iLastProgress = cint(oMatch(oMatch.Count -1).SubMatches(0))
+								oLogging.ReportProgress sLine, iLastProgress
+							End if
 						End if
 					End if
 				Next
@@ -4024,6 +4038,8 @@ Class Utility
 			case "ULTIMATE", "ULTIMATEE", "ULTIMATEN"
 				IsHighEndSKUEx = TRUE
 			case "ENTERPRISE", "ENTERPRISEN", "ENTERPRISES", "ENTERPRISESN"
+				IsHighEndSKUEx = TRUE
+			case "PROFESSIONAL", "PROFESSIONALN"
 				IsHighEndSKUEx = TRUE
 			case "EDUCATION", "EDUCATIONN"
 				IsHighEndSKUEx = TRUE

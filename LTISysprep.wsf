@@ -12,7 +12,7 @@
 ' //
 ' // File:      LTISysprep.wsf
 ' // 
-' // Version:   6.3.8298.1000
+' // Version:   6.3.8330.1000
 ' // 
 ' // Purpose:   Sysprep the computer to prepare it for capture
 ' // 
@@ -146,6 +146,54 @@ Class LTISysprep
 			oLogging.CreateEntry "Re-arming skipped by user request.", LogTypeInfo
 		End if
 
+
+		'//----------------------------------------------------------------------------
+		'//  Rearm Office 2013 if it is present
+		'//----------------------------------------------------------------------------
+
+		If not UCase(oEnvironment.Item("SkipRearm")) = "YES" then
+			For each sOSPPPath in Array(oEnvironment.Substitute("%ProgramFiles%\Microsoft Office\Office15\OSPPREARM.EXE"), oEnvironment.Substitute("%ProgramFiles(x86)%\Microsoft Office\Office15\OSPPREARM.EXE"))
+				If oFSO.FileExists(sOSPPPath) then
+
+					oLogging.CreateEntry "Re-arming Office 2013 activation", LogTypeInfo
+					iRetVal = oUtility.RunWithConsoleLogging("""" & sOSPPPath & """")
+					If iRetVal = 0 then
+						oLogging.CreateEntry "Re-armed Office 2013 successfully.", LogTypeInfo
+					Else
+						oLogging.CreateEntry "Unexpected return code while re-arming Office 2013, RC = " & iRetVal, LogTypeWarning
+					End if
+
+				End if
+
+			Next
+		Else
+			oLogging.CreateEntry "Re-arming skipped by user request.", LogTypeInfo
+		End if
+
+
+		'//----------------------------------------------------------------------------
+		'//  Rearm Office 2016 if it is present
+		'//----------------------------------------------------------------------------
+
+		If not UCase(oEnvironment.Item("SkipRearm")) = "YES" then
+			For each sOSPPPath in Array(oEnvironment.Substitute("%ProgramFiles%\Microsoft Office\Office16\OSPPREARM.EXE"), oEnvironment.Substitute("%ProgramFiles(x86)%\Microsoft Office\Office16\OSPPREARM.EXE"))
+				If oFSO.FileExists(sOSPPPath) then
+
+					oLogging.CreateEntry "Re-arming Office 2016 activation", LogTypeInfo
+					iRetVal = oUtility.RunWithConsoleLogging("""" & sOSPPPath & """")
+					If iRetVal = 0 then
+						oLogging.CreateEntry "Re-armed Office 2016 successfully.", LogTypeInfo
+					Else
+						oLogging.CreateEntry "Unexpected return code while re-arming Office 2016, RC = " & iRetVal, LogTypeWarning
+					End if
+
+				End if
+
+			Next
+		Else
+			oLogging.CreateEntry "Re-arming skipped by user request.", LogTypeInfo
+		End if
+ 
 		
 		'//----------------------------------------------------------------------------
 		'//  Prepare for running Sysprep

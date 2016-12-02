@@ -11,7 +11,7 @@
 ' //
 ' // File:      LTISuspend.wsf
 ' // 
-' // Version:   6.3.8298.1000
+' // Version:   6.3.8330.1000
 ' // 
 ' // Purpose:   Suspend a task sequence to allow manually steps to be performed.
 ' //            Note that this is only supported while in the full OS.

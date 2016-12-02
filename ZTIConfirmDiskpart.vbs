@@ -6,7 +6,7 @@
 ' //
 ' // File:      ZTIConfFirmDiskpart.wsf
 ' // 
-' // Version:   6.3.8298.1000
+' // Version:   6.3.8330.1000
 ' // 
 ' // Purpose:   Solution Accelerator for Business Desktop Deployment
 ' // 

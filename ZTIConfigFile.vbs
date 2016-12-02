@@ -7,7 +7,7 @@
 ' //
 ' // File:      ZTIConfigFile.wsf
 ' // 
-' // Version:   6.3.8298.1000
+' // Version:   6.3.8330.1000
 ' // 
 ' // Purpose:   Common Routines for processing MDT XML files
 ' // 

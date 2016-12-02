@@ -11,7 +11,7 @@
 ' //
 ' // File:      ZTIWinRE.wsf
 ' // 
-' // Version:   6.3.8298.1000
+' // Version:   6.3.8330.1000
 ' // 
 ' // Purpose:   Install WinRE or DART on local machine for recovery scenarios.
 ' // 
@@ -76,9 +76,13 @@ Class ZTIWinRE
 		Dim bUnMapDrive
 		Dim iRC
 		Dim sREAgentC
+		Dim iVerMinorOSCurrentVersion
 
 
+		oUtility.GetMajorMinorVersion(oEnvironment.Item("OSCurrentVersion"))		
+		iVerMinorOSCurrentVersion = oUtility.VersionMinor		
 		oUtility.GetMajorMinorVersion(oEnvironment.Item("ImageBuild"))
+		
 		If UCase(oEnvironment.Item("PrepareWinRE")) <> "YES" then
 			oLogging.CreateEntry "WinRE is not enabled, Skip.", LogTypeInfo
 			Main = SUCCESS
@@ -87,10 +91,14 @@ Class ZTIWinRE
 			oLogging.CreateEntry "WinRE is not supported on Vista or Older. Skip.", LogTypeInfo
 			Main = SUCCESS
 			Exit function
-		ElseIf (oUtility.VersionMajor = 6 and oUtility.VersionMinor = 1 ) then			
+		ElseIf (oUtility.VersionMajor = 6 and oUtility.VersionMinor = 1 and iVerMinorOSCurrentVersion > 1 ) then			
 				oLogging.CreateEntry "WinRE cannot be enabled for Windows 7 when using Windows PE from ADK due to compatibility issue with ReAgentC.exe, skipping.", LogTypeInfo
 				Main = SUCCESS
 				Exit function	
+		ElseIf (oUtility.VersionMajor = 6 and oUtility.VersionMinor > 1 ) then
+				oLogging.CreateEntry "WinRE is integrated for Win 8 and above, skipping.", LogTypeInfo
+				Main = SUCCESS
+				Exit function					
 		End if
 
 		oLogging.CreateEntry "---------------- Initialization ----------------", LogTypeInfo

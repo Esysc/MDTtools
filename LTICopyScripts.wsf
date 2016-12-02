@@ -10,7 +10,7 @@
 ' //
 ' // File:      LTICopyScripts.wsf
 ' // 
-' // Version:   6.3.8298.1000
+' // Version:   6.3.8330.1000
 ' // 
 ' // Purpose:   Copy the LTI/ZTI scripts to the local drive.
 ' // 
@@ -52,8 +52,7 @@ Class LTICopyScripts
 			"Summary_scripts.vbs", "LTICleanup.wsf", "LTIGetFolder.wsf", "ZTINICConfig.wsf", _
 			"ZTINICUtility.vbs","ZTIBCDUTILITY.VBS", "ZTIDataAccess.vbs", "LTISuspend.wsf", _
 			"ZTIDiskUtility.vbs", "ZTIRunCommandHidden.wsf", "header-image.png", "NavBar.png", "Computer.png", _
-			"SetupComplete.cmd", "SetupRollback.cmd", "ZTISetupRollback.wsf", "LTITriggerUpgradeFailure.wsf", "LTIBootstrap.vbs", "SetUpgradeStatus.wsf", _
-			"LTIBootstrapUpgradeSummary.vbs", "UpgradeSummary.wsf")
+			"SetupComplete.cmd", "SetupRollback.cmd", "ZTISetupRollback.wsf", "LTITriggerUpgradeFailure.wsf", "LTIBootstrap.vbs")
 			
 		SourcePath = oUtility.ScriptDir & "\"		
 		TargetPath = oUtility.LocalRootPath & "\Scripts\"

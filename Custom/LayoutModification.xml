@@ -1,0 +1,11 @@
+<LayoutModificationTemplate xmlns="http://schemas.microsoft.com/Start/2014/LayoutModification" Version="1">
+<DefaultLayoutOverride>
+<StartLayoutCollection>
+<defaultlayout:StartLayout xmlns:defaultlayout="http://schemas.microsoft.com/Start/2014/FullDefaultLayout">
+<start:Group xmlns:start="http://schemas.microsoft.com/Start/2014/StartLayout" Name="Apps">
+<start:DesktopApplicationTile Size="2x2" Column="2" Row="0" DesktopApplicationLinkPath="%ALLUSERSPROFILE%\Microsoft\Windows\Start Menu\Programs\Accessories\Internet Explorer.lnk"/>
+</start:Group>
+</defaultlayout:StartLayout>
+</StartLayoutCollection>
+</DefaultLayoutOverride>
+</LayoutModificationTemplate>

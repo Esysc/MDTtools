@@ -11,7 +11,7 @@
 ' //
 ' // File:      ZTIBDE.wsf
 ' // 
-' // Version:   6.3.8298.1000
+' // Version:   6.3.8330.1000
 ' // 
 ' // Purpose:   Install and configure Bitlocker Drive Encryption
 ' // 
@@ -378,7 +378,10 @@ Class ZTIBDE
 		'//  Determine BDE drive letter
 		'//----------------------------------------------------------------------------			
 		oUtility.GetMajorMinorVersion(oEnvironment.Item("OSCurrentVersion"))
-		If oUtility.VersionMajor >=6 and oUtility.VersionMinor >= 1 and GetBootDrive = Failure Then	
+		iOSCVMajor = oUtility.VersionMajor
+		iOSCVMinor = oUtility.VersionMinor
+		
+		If ((iOSCVMajor >=10) or (iOSCVMajor >=6 and iOSCVMinor >= 1)) and GetBootDrive = Failure Then	
 			oLogging.CreateEntry "Setting BDE Drive letter to nothing as we are unable to get the boot drive.", LogTypeInfo
 			oEnvironment.Item("BdeDriveLetter") = ""
 		ElseIf oEnvironment.Item("BdeDriveLetter") = "" Then
