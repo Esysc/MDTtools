@@ -49,7 +49,11 @@ function copyProgress ($sourcePath, $destinationPath) {
 		$i=0
 		Foreach ($file in $files) {
 			$i++
-				$msg = "Copying release $sourcePath ..... | $file ($i of $filecount) | Percent progress:  " +  (($i/$filecount)*100) + "%"
+			#	$msg = "Copying release $sourcePath ..... | $file ($i of $filecount) | Percent progress:  " +  (($i/$filecount)*100) + "%"
+			$msg = "Copying release $sourcePath ..... | $file ($i of $filecount) <br/>
+			<div class='bar' role='progressbar'   aria-valuenow='"+ (($i/$filecount)*100) + "' aria-valuemin='0' aria-valuemax='100' style='width:"+ (($i/$filecount)*100) + "% '>
+        <span class='sr-only'  >"+ (($i/$filecount)*100) + "%</span>
+        </div>"
 				$body = @{
 					notifid = $PK
 						status = $msg

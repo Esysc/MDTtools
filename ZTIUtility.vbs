@@ -468,15 +468,18 @@ class Logging
 
                                                        ' Call the web service
                                                        ' JSON CALL to Phreeze .I 've abandoned the native call made by MDT as its methods are limited
-                                                       ' Vbs method are worst but I m  at least  able to send json data as PUT method
-                                                       Set objXmlHttpMain = CreateObject("Msxml2.ServerXMLHTTP")
+                                                 '      ' Vbs method are worst but I m  at least  able to send json data as PUT method
+                                                       Set objXmlHttpMain = CreateObject("Msxml2.ServerXMLHTTP.6.0")
                                                        URL = oEnvironment.Item("WebSysprod") & "/api/provisioningnotifications/" & Pk
                                                        objXmlHttpMain.open "PUT",URL, False
-                                                       objXmlHttpMain.setRequestHeader "Content-Type", "application/json"
+                                                       'objXmlHttpMain.setRequestHeader "Content-Type", "application/json"
 													   objXmlHttpMain.setRequestHeader "User-Agent", "perl"  
-                                                       objXmlHttpMain.send vData
+                                                       objXmlHttpMain.send(vData)
 '
 '
+
+	
+
 '
 '                               END OF ADDING SYSPROD WEB SERVICE
 '
