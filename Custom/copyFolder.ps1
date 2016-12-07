@@ -49,10 +49,12 @@ function copyProgress ($sourcePath, $destinationPath) {
 		$i=0
 		Foreach ($file in $files) {
 			$i++
+			$percent = [math]::round($i/$filecount*100, 2)
 			#	$msg = "Copying release $sourcePath ..... | $file ($i of $filecount) | Percent progress:  " +  (($i/$filecount)*100) + "%"
 			$msg = "Copying release $sourcePath ..... | $file ($i of $filecount) <br/>
-			<div class='bar' role='progressbar'   aria-valuenow='"+ (($i/$filecount)*100) + "' aria-valuemin='0' aria-valuemax='100' style='width:"+ (($i/$filecount)*100) + "% '>
-        <span class='sr-only'  >"+ (($i/$filecount)*100) + "%</span>
+			<div class='progress progress-striped progress-danger active'><div class='bar bar-info' role='progressbar'   aria-valuenow='"+ $percent + "' aria-valuemin='0' aria-valuemax='100' style='width:"+ $percent+"%'>
+			 <span>"+ $percent + "%</span></div>
+       
         </div>"
 				$body = @{
 					notifid = $PK
@@ -73,7 +75,7 @@ $stream = $web.GetRequestStream()
 $stream.Write($bytes,0,$bytes.Length)
 $stream.close()
 }
-				Write-Progress -activity "Copying release..." -status "$file ($i of $filecount)" -percentcomplete (($i/$filecount)*100)
+				Write-Progress -activity "Copying release..." -status "$file ($i of $filecount)" -percentcomplete $percent
 
 # Determine the absolute path of this object's parent container.  This is stored as a different attribute on file and folder objects so we use an if block to cater for both
 				if ($file.psiscontainer) {

@@ -440,13 +440,10 @@ class Logging
                                                          confIP = oEnvironment.Item("Data")
                                                          confIP = LCase(confIP)
                                                          confIP = """" &  Replace(confIP," : ", """:""") & ""","
-                                                         If sTotalSteps = 0 Then
-                                                                sTotalSteps = 100
+														 If Not (( sTotalSteps = 0 ) And ( sCurrentStep = 0 )) Then
+															 Progress = sCurrentStep / sTotalSteps * 100
                                                          End If
-                                                         If sCurrentStep = 0 Then
-                                                                sCurrentStep = sTotalSteps
-                                                         End If
-                                                         Progress = sCurrentStep / sTotalSteps * 100
+                                                         
                                                          Dim Phase
                                                          Phase = ""
                                                          vData = "{"

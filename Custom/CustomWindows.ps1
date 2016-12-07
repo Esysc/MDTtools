@@ -237,9 +237,11 @@ restNotif("Unpin Edge from task bar")
 Pin-App "Microsoft Edge" -unpin -taskbar
 
 # Add Internet explorer Tile and link
+# Adjust ILO console wrong link
 restNotif("Pinning IEXPLORER..... ")
 Copy-Item -Path $PSScriptRoot'\Internet Explorer.lnk' -Destination 'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Accessories'
 Copy-Item -Path $PSScriptRoot'\LayoutModification.xml' -Destination 'C:\Users\Default\AppData\Local\Microsoft\Windows\Shell'
+Copy-Item -Path $PSScriptRoot'\iLO Integrated Remote Console.lnk' -Destination 'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Hewlett-Packard'
 
 #Call GPO to block start menu
 restNotif("Applying GPO policy for start menu....")

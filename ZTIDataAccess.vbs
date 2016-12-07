@@ -834,7 +834,7 @@ Class WebService
 		Dim iSeverity
 
 
-		Set oHTTP = CreateObject("MSXML2.ServerXMLHTTP")
+		Set oHTTP = CreateObject("MSXML2.ServerXMLHTTP.6.0")
 		Set oReturn = oUtility.GetMSXMLDOMDocument
 		oReturn.setProperty "SelectionLanguage", "XPath"
 		If sMethod = "REST" then
